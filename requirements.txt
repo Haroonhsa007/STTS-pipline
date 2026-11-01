@@ -1,0 +1,11 @@
+torch==2.11.0
+torchaudio==2.11.0
+transformers>=5.20.2,<6
+accelerate>=1.10,<2
+numpy>=2,<3
+scipy>=1.15,<2
+librosa>=0.11,<1
+soundfile>=0.13,<1
+sounddevice>=0.5,<1
+psutil>=7,<8
+sentencepiece>=0.2,<1

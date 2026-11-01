@@ -1,0 +1,3 @@
+-r requirements-voice.txt
+# Indic-Transcribe's Python adapter ships inside the gated HF checkpoint.
+# Do not install bodhan-genai[asr-infer]: it pins an incompatible Transformers.

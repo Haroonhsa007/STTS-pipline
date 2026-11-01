@@ -1,0 +1,11 @@
+STTS Pipeline
+Copyright 2026 STTS Pipeline contributors
+
+Original pipeline source code and documentation are licensed under the
+Apache License, Version 2.0. See LICENSE for the full terms.
+https://www.apache.org/licenses/LICENSE-2.0
+
+Third-party model weights, converted checkpoints, codecs, downloaded native
+runtimes and dependencies retain their respective publishers' licenses and
+notices. They are not relicensed by this project's Apache-2.0 license.
+See THIRD_PARTY_MODELS.md and the notices accompanying those assets.

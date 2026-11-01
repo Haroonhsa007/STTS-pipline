@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>STTS · Voice Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link href="/static/style.css" rel="stylesheet" />
+    <script src="/static/live-conversation.js" defer></script>
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <header class="brandbar">
+      <div class="brand">
+        <svg viewBox="0 0 28 28" width="28" height="28" aria-hidden="true">
+          <path
+            d="M3 11v6m5-11v16m6-20v24m6-20v16m5-11v6"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          /></svg
+        ><span>STTS <span class="muted">/ Voice Studio</span></span>
+      </div>
+      <span class="scope"
+        >Local workspace
+        <span id="connection" class="connection">Connecting</span></span
+      >
+    </header>
+    <main>
+      <div class="title-row">
+        <div>
+          <h1>Conversation</h1>
+          <p>English & Urdu. Streamed replies, with every stage measured.</p>
+        </div>
+        <button id="reset" type="button">New conversation</button>
+      </div>
+      <div class="workspace">
+        <aside class="settings panel" aria-label="Voice settings">
+          <h2>Voice & models</h2>
+          <div class="field">
+            <label for="engine">Inference engine</label
+            ><select id="engine">
+              <option value="bilingual">Live English ↔ Urdu</option>
+              <option value="native">Fast English only</option>
+              <option value="python">Python · Urdu & voice controls</option>
+            </select>
+          </div>
+          <button id="warmup" type="button">Prepare conversation</button>
+          <p id="native-ready" class="help">
+            Load once before your first conversation.
+          </p>
+          <div class="field">
+            <label for="language">Conversation language</label
+            ><select id="language">
+              <option value="auto">Auto · English / اردو</option>
+              <option value="en">English</option>
+              <option value="ur">Urdu / اردو</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="tts">Speech model</label
+            ><select id="tts">
+              <option value="liquid">Liquid Audio · 2B</option>
+              <option value="omnivoice">OmniVoice · 0.6B</option>
+              <option value="indic-mio">Indic-Mio · 0.6B</option>
+            </select>
+          </div>
+          <p id="voice-note" class="help">
+            Built-in voices. Gender and English locale controls.
+          </p>
+          <div id="liquid-controls">
+            <div class="field">
+              <label for="gender">Voice</label
+              ><select id="gender">
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="locale">Locale</label
+              ><select id="locale">
+                <option>American English</option>
+                <option>British English</option>
+              </select>
+            </div>
+          </div>
+          <div id="omni-controls" hidden>
+            <div class="field">
+              <label for="description">Voice description</label
+              ><textarea
+                id="description"
+                rows="2"
+                placeholder="A warm, calm voice"
+              ></textarea>
+            </div>
+            <div class="field">
+              <label for="expression">Vocal event</label
+              ><select id="expression">
+                <option value="neutral">None</option>
+                <option value="laughter">Laughter</option>
+                <option value="sigh">Sigh</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="speed"
+                >Speaking speed <output id="speed-label">1.0×</output></label
+              ><input
+                id="speed"
+                type="range"
+                min="0.5"
+                max="2"
+                value="1"
+                step="0.1"
+              />
+            </div>
+          </div>
+          <div id="mio-controls" hidden>
+            <div class="field">
+              <label for="emotion">Emotion tag</label
+              ><select id="emotion"></select>
+            </div>
+            <p class="help">
+              Tags guide delivery. Listen to confirm the emotion.
+            </p>
+          </div>
+          <details id="reference-controls" hidden>
+            <summary>Reference voice</summary>
+            <div class="field">
+              <label for="voice-file">Voice clip · WAV / FLAC, ≤30 s</label
+              ><input
+                id="voice-file"
+                type="file"
+                accept=".wav,.flac,.aiff,audio/wav,audio/flac"
+              />
+            </div>
+            <div class="field" id="reference-text-field">
+              <label for="reference-text">Exact words in the clip</label
+              ><textarea id="reference-text" rows="2"></textarea>
+            </div>
+            <button id="clear-voice" type="button">Clear reference</button>
+          </details>
+          <details>
+            <summary>Inference settings</summary>
+            <div class="field">
+              <label for="device">Compute device</label
+              ><select id="device">
+                <option value="auto">Auto · MPS on M4</option>
+                <option value="cpu">CPU</option>
+                <option value="mps">Apple MPS</option>
+                <option value="cuda">NVIDIA CUDA</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="tokens">Maximum reply tokens</label
+              ><input
+                id="tokens"
+                type="number"
+                min="16"
+                max="1024"
+                value="384"
+              />
+            </div>
+            <div class="field" id="steps-field" hidden>
+              <label for="steps">OmniVoice steps</label
+              ><input id="steps" type="number" min="4" max="64" value="16" />
+            </div>
+            <label class="check"
+              ><input id="offline" type="checkbox" checked /> Cached models
+              only</label
+            ><label class="check"
+              ><input id="verify" type="checkbox" /> Verify TTS with ASR</label
+            >
+            <p class="help">
+              Verification adds latency. It measures recognition agreement, not
+              naturalness.
+            </p>
+          </details>
+          <div class="model-list">
+            <span>Speech recognition</span>
+            <p id="asr-model">LFM3-Audio-2B</p>
+            <span>Language model</span>
+            <p id="llm-model">LFM3-1.7B</p>
+            <small id="access-note">Models load when you send a turn.</small>
+          </div>
+        </aside>
+        <section
+          class="conversation-column"
+          aria-label="Conversation and microphone"
+        >
+          <div class="metrics-strip panel" aria-label="Latest turn metrics">
+            <div><span>Turn latency</span><strong id="latency">—</strong></div>
+            <div><span>LLM first token</span><strong id="ttft">—</strong></div>
+            <div>
+              <span>First audio chunk</span><strong id="first-audio">—</strong>
+            </div>
+          </div>
+          <div class="chat panel">
+            <div class="section-head">
+              <h2>Conversation</h2>
+              <span id="turn-count">0 turns</span>
+            </div>
+            <div
+              id="messages"
+              class="messages"
+              role="log"
+              aria-label="Conversation messages"
+              aria-live="polite"
+            >
+              <div id="empty-chat" class="empty-chat">
+                <svg
+                  viewBox="0 0 60 48"
+                  width="60"
+                  height="48"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M5 21v6m8-14v22m8-29v36m9-23v10m9-23v36m8-29v22m8-14v6"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                <h3>A conversation starts here.</h3>
+                <p>
+                  Record a message or type below.<br />Your assistant remembers
+                  recent turns.
+                </p>
+              </div>
+            </div>
+            <div id="reply-warning" class="reply-warning" hidden>
+              <span
+                >The token limit was reached. The answer may be
+                incomplete.</span
+              ><button id="continue" type="button">Continue answer</button>
+            </div>
+            <div id="player-wrap" class="player-wrap" hidden>
+              <audio id="player" controls></audio
+              ><a id="download" download>Download WAV</a>
+            </div>
+            <form id="composer">
+              <label class="sr-only" for="message">Your message</label
+              ><textarea
+                id="message"
+                rows="2"
+                placeholder="Type a message in English or Urdu…"
+                maxlength="8000"
+                dir="auto"
+              ></textarea>
+              <div class="composer-actions">
+                <label for="mode" class="sr-only">Response mode</label
+                ><select id="mode">
+                  <option value="run">Reply with voice</option>
+                  <option value="ask">Text reply</option>
+                  <option value="speak">Read my text aloud</option>
+                  <option value="transcribe">
+                    Transcribe audio only
+                  </option></select
+                ><button id="send" type="submit">
+                  Send message <span aria-hidden="true">↗</span>
+                </button>
+              </div>
+            </form>
+          </div>
+          <section class="recorder panel" aria-labelledby="mic-title">
+            <div class="section-head">
+              <h2 id="mic-title">Microphone</h2>
+              <div class="mic-heading-actions">
+                <span id="mic-state">Off</span
+                ><button id="interrupt" type="button" disabled>Interrupt</button
+                ><button id="record" type="button" class="primary">
+                  Record turn
+                </button>
+              </div>
+            </div>
+            <div class="mic-select">
+              <label for="mic-device" class="sr-only">Input microphone</label
+              ><select id="mic-device">
+                <option value="">System default microphone</option></select
+              ><button id="check-mic" type="button">Check microphone</button>
+            </div>
+            <canvas
+              id="waveform"
+              height="64"
+              aria-label="Live microphone waveform"
+            ></canvas>
+            <div class="meter-caption">
+              <span>Input RMS <span id="rms">0.00000</span></span
+              ><span id="record-time">0.0 / 30 s</span>
+            </div>
+            <div class="record-actions">
+              <label class="check"
+                ><input id="continuous" type="checkbox" checked /> Hands-free
+                conversation</label
+              ><label class="check"
+                ><input type="checkbox" id="auto-stop" checked /> End after a
+                pause</label
+              ><label class="check"
+                ><input type="checkbox" id="autoplay" checked /> Play
+                replies</label
+              >
+            </div>
+            <p id="mic-help" class="help">
+              Start once, then speak naturally. Pauses send your turn; speaking
+              over the assistant interrupts it. Use headphones for best echo
+              cancellation. End conversation closes the microphone.
+            </p>
+            <div class="upload-row">
+              <label for="audio-file">Or send an audio file</label
+              ><input
+                type="file"
+                id="audio-file"
+                accept=".wav,.flac,.aiff,audio/wav,audio/flac"
+              />
+            </div>
+          </section>
+          <details class="accuracy">
+            <summary>Accuracy check (optional)</summary>
+            <div class="field">
+              <label for="expected-transcript"
+                >Exact words spoken in your next recording</label
+              ><textarea
+                id="expected-transcript"
+                rows="2"
+                dir="auto"
+                placeholder="Reference transcript for STT word and character error rates"
+              ></textarea>
+            </div>
+          </details>
+          <p id="notice" class="notice" role="status" aria-live="polite">
+            Ready. Model loading is measured separately from inference.
+          </p>
+        </section>
+        <aside class="telemetry" aria-label="Live performance metrics">
+          <section class="panel">
+            <div class="section-head">
+              <h2>Live performance</h2>
+              <span id="phase">Idle</span>
+            </div>
+            <div id="stages" class="stages">
+              <p class="help">Stage timings appear during your first turn.</p>
+            </div>
+            <dl class="key-values">
+              <div>
+                <dt>LLM speed</dt>
+                <dd id="token-speed">—</dd>
+              </div>
+              <div>
+                <dt>Generated tokens</dt>
+                <dd id="token-count">—</dd>
+              </div>
+              <div>
+                <dt>STT real-time factor</dt>
+                <dd id="asr-rtf">—</dd>
+              </div>
+              <div>
+                <dt>TTS real-time factor</dt>
+                <dd id="tts-rtf">—</dd>
+              </div>
+              <div>
+                <dt>STT word error rate</dt>
+                <dd id="wer">—</dd>
+              </div>
+            </dl>
+            <p class="help">
+              RTF below 1 means faster than audio duration. Word error rate
+              needs a reference transcript.
+            </p>
+          </section>
+          <section class="panel">
+            <div class="section-head">
+              <h2>System</h2>
+              <span id="freshness">Live</span>
+            </div>
+            <dl class="key-values">
+              <div>
+                <dt>CPU · all cores</dt>
+                <dd id="cpu">—</dd>
+              </div>
+              <div>
+                <dt>Python RSS</dt>
+                <dd id="memory">—</dd>
+              </div>
+              <div>
+                <dt>Native runtime RSS</dt>
+                <dd id="native-memory">—</dd>
+              </div>
+              <div>
+                <dt>Free disk</dt>
+                <dd id="free-disk">—</dd>
+              </div>
+              <div>
+                <dt>Available RAM</dt>
+                <dd id="available">—</dd>
+              </div>
+              <div>
+                <dt>Swap used</dt>
+                <dd id="swap">—</dd>
+              </div>
+              <div>
+                <dt>Resolved device</dt>
+                <dd id="resolved-device">—</dd>
+              </div>
+            </dl>
+          </section>
+          <section class="panel">
+            <div class="section-head">
+              <h2>Recent turns</h2>
+              <span>Session</span>
+            </div>
+            <div id="recent" class="recent">
+              <p class="help">Completed turns will appear here.</p>
+            </div>
+            <button id="export" type="button" disabled>
+              Export metrics JSON
+            </button>
+          </section>
+          <p class="help footnote">
+            Native English streams text and audio as they are generated. Python
+            voices stream one sentence at a time. Native text and audio share
+            one stage; their times cannot be separated. Emotion and naturalness
+            need listening tests.
+          </p>
+        </aside>
+      </div>
+    </main>
+  </body>
+</html>

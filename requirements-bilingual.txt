@@ -1,0 +1,3 @@
+-r requirements-web.txt
+onnxruntime>=1.24,<2
+ctranslate2>=4.8,<5

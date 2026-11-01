@@ -1,0 +1,2 @@
+-r requirements.txt
+miocodec @ git+https://github.com/Aratako/MioCodec.git@77473544375d57e96cbdfd5d7d257e8f280fa8e3
